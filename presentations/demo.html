@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="../dist/reset.css">
+		<link rel="stylesheet" href="../dist/reveal.css">
+		<link rel="stylesheet" href="../dist/theme/cnh-white.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+    <style>
+
+
+      body, .reveal {
+        background-color: #000;
+      }
+
+      .reveal section::after {
+        content: '';
+        position: absolute;
+        bottom: 1em;
+        right: 1em;           /* Changed from left to right */
+        width: 2.5em;           /* Reduced size */
+        height: 2.5em;          /* Reduced size */
+        background-image: url('https://static.dlrportal.com/assets/cnh-brand-logos/svgs/regular/cnhi.svg');
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: bottom right;  /* Adjusted background position */
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .reveal .slides section {
+        display: block !important;
+        text-align: left;
+        justify-content: flex-start !important;
+        align-items: flex-start !important;
+        padding-top: 1em;
+        padding-left: 1em;
+        /* border: 1px solid red; */
+      }
+      
+      section {
+        background-color: #fff;
+        /* border: 1px solid red; */
+        height: 95%;
+      }
+
+      
+
+    </style>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+				<section>
+          <h2>Bulleted List</h2>
+          <ul>
+            <li>Item 1
+              <ul>
+                <li>Subitem 1</li>
+                <li>Subitem 2</li>
+                <li>Subitem 3
+                  <ul>
+                    <li>Subsubitem 1</li>
+                    <li>Subsubitem 2</li>
+                    <li>Subsubitem 3</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li>Item 2
+              <ul>
+                <li>Subitem 1</li>
+                <li>Subitem 2</li>
+                <li>Subitem 3</li>
+              </ul>
+            </li>
+            <li>Item 3</li>
+          </ul>
+        </section>
+				<section><h2>Slide 2</h2></section>
+
+        <!--
+        Reveal.js applies its scaling transform to the .slides container, but not the entire .reveal container. Placing global images in .slides and styling them with ems ensures they are scaled correctly.
+        -->
+        <!-- <img id="logo" src="https://static.dlrportal.com/assets/cnh-brand-logos/svgs/regular/cnhi.svg" alt="Logo - CNH Industrial"> -->
+			</div>
+
+      
+		</div>
+
+		<script src="../dist/reveal.js"></script>
+		<script src="../plugin/notes/notes.js"></script>
+		<script src="../plugin/markdown/markdown.js"></script>
+		<script src="../plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+        // 16:9 Aspect Ratios: 1280 x 720 || 1600 x 900 1920 x 1080
+        width: 1920,
+        height: 1080,
+        margin: 0.05, // 0.05 || 0.01 for 16:9
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+
+      
+		</script>
+	</body>
+</html>
