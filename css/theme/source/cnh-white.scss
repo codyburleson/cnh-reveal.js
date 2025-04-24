@@ -1,0 +1,63 @@
+@use "white";
+
+/*********************************************
+ * CNH WHITE
+ *********************************************/
+
+:root {
+  --r-heading-color: #AB293B;
+  --r-heading-text-transform: normal;
+}
+
+body, .reveal {
+  background-color: #000;
+}
+
+.reveal section::after {
+  content: '';
+  position: absolute;
+  bottom: 1em;
+  right: 1em;           /* Changed from left to right */
+  width: 2.5em;           /* Reduced size */
+  height: 2.5em;          /* Reduced size */
+  background-image: url('https://static.dlrportal.com/assets/cnh-brand-logos/svgs/regular/cnhi.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: bottom right;  /* Adjusted background position */
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Align normal section slides to the left */
+.reveal .slides section {
+  display: block !important;
+  text-align: left;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  padding-top: 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+  /* border: 1px solid red; */
+}
+
+/* Align "chapter" titles to the center vertically and horizontally 
+	•	display: flex — ensures it’s a flex container.
+	•	flex-direction: column — stacks content vertically.
+	•	justify-content: center — centers content vertically.
+	•	align-items: center — centers content horizontally.
+*/
+.reveal .slides section.chapter {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center !important; /* vertical */
+  align-items: center !important;     /* horizontal */
+  text-align: center !important;
+  padding-top: 0;
+  padding-left: 0;
+}
+
+section {
+  background-color: #fff;
+  /* border: 1px solid red; */
+  height: 95%;
+}

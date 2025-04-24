@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="../dist/reset.css">
+		<link rel="stylesheet" href="../dist/reveal.css">
+		<link rel="stylesheet" href="../dist/theme/cnh-white.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="../plugin/highlight/monokai.css">
+    <style>
+
+      /* Temporary styles that should be moved to the theme or otherwise styles that are specific to this presentation file only. */
+
+      h2[data-id="code-title"] {
+        /* Your styles here */
+        font-family: monospace;
+        font-size: .85em;
+        margin-left: 2em;
+        margin-top: .75em;
+      }
+
+      .reveal .code-wrapper {
+        background-color: #272822;
+        padding: 18px;
+        /* border-radius: 10px; */
+      }
+
+      code {
+        color:#C83500;
+        font-weight: bold;
+      }
+
+      .reveal .slides section.chapter p {
+        width: 75%;
+      }
+
+      .reveal .controls .navigate-left,
+      .reveal .controls .navigate-right,
+      .reveal .controls .navigate-up,
+      .reveal .controls .navigate-down {
+        color: #8B0018; /* Example: Hot pink */
+      }
+
+      /* Optional: Change hover color */
+      .reveal .controls .navigate-left:hover,
+      .reveal .controls .navigate-right:hover,
+      .reveal .controls .navigate-up:hover,
+      .reveal .controls .navigate-down:hover {
+        color: #AB293B;
+      }
+
+    </style>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+
+        <section class="chapter">
+          <h1>Label and Long Text Translations</h1>
+          <h2>Implementation Pattern</h2>
+          <p>Load all label translations at once in a provider component and broadcast them to consumers using Lit's <a href="https://lit.dev/docs/data/context/">Context</a> feature.</p>
+        </section>
+
+        <section>
+          <h2>Context Definition</h2>
+          <p>Define your context objects (context keys) in a <code>translation-service-context.ts</code> file, including a <code>"translationsLoaded"</code> context key.</p>
+          <h2 data-id="code-title">translation-service-context.ts</h2>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+          import { createContext } from "@lit/context";
+          import { DpResource } from "@cnh/dp-common";
+
+          export const adminTranslationsContext = createContext<Record<string, string> | undefined>("adminTranslations");
+          export const createUserTranslationsContext = createContext<Record<string, string> | undefined>("createUserTranslations");
+          export const aorTextTranslationsContext = createContext<DpResource | null>("aorTextTranslations");
+          export const translationsLoadedContext = createContext<boolean>("translationsLoaded");
+          </script></code></pre>
+
+          <p>The <code>aorTextTranslationsContext</code> is for long text translations (a <a href="https://static.dlrportal.com/dp-assets/dp-common/latest/docs/interfaces/index.DpResource.html">DpResource</a> object is a <a href="https://static.dlrportal.com/dp-assets/dp-common/latest/docs/classes/index.SearchService.html">SearchService</a> response).</p>
+          <p>The <code>translationsLoadedContext</code> is a flag we can use to render a loading idicator while translations are loading and the flag is not <code>true</code>.</p>
+        </section>
+
+        <section>
+          <h2>Provider</h2>
+          <p>Load all translations and broadcast them to consumers in a provider component.</p>
+          <h2 data-id="code-title">Import provide and the context objects</h2>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+            import { provide } from "@lit/context";
+            import {
+              adminTranslationsContext,
+              createUserTranslationsContext,
+              aorTextTranslationsContext,
+              translationsLoadedContext,
+            } from "./translation-service-context";
+            </script></code></pre>
+            <h2 data-id="code-title">Provide the data for each context object</h2>
+            <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+              @provide({ context: adminTranslationsContext })
+              adminTranslations: Record<string, string> | undefined;
+
+              @provide({ context: createUserTranslationsContext })
+              createUserTranslations: Record<string, string> | undefined;
+
+              @provide({ context: aorTextTranslationsContext })
+              aorTextTranslations: DpResource | null = null;
+
+              @provide({ context: translationsLoadedContext })
+              translationsLoaded = false;
+              </script></code></pre>
+        </section>
+
+
+        <section>
+          <h2>Provider (continued)...</h2>
+          <p>Create a public property for each translation service if you want to allow injection (typically for testing).</p>
+          <p>Or, create a private state variable...</p>
+          <h2 data-id="code-title">Import provide and the context objects</h2>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+            @property({ type: Object })
+            adminTranslationService?: TranslationService;
+
+            // or...
+
+            @state()
+            private _adminTranslationService: TranslationService;
+          </script></code></pre>
+           
+        </section>
+
+        <section>
+          <h2>Provider  (continued)...</h2>
+          <p>Instantiate the Translation Service(s) and load the translations in the <code>connectedCallback</code> lifecycle event.</p>
+          <h2 data-id="code-title">Scroll this code block to see the full example...</h2>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+          async connectedCallback(): Promise<void> {
+            super.connectedCallback();
+
+            this.adminTranslationService = new TranslationService(
+              "dp.admin",
+              authenticatedPerson?.preferredLanguage ?? "en",
+              apiBase,
+            );
+
+            this._createUserTranslationService = new TranslationService(
+              "dp.admin.createUser",
+              authenticatedPerson?.preferredLanguage ?? "en",
+              apiBase,
+            );
+        
+            try {
+              const [
+                adminTranslations,
+                createUserTranslations
+              ] = await Promise.all([
+                this._adminTranslationsService.load(),
+                this._createUserTranslationsService.load(),
+              ]);
+      
+              this.adminTranslations = adminTranslations;
+              this.createUserTranslations = createUserTranslations;
+              this.aorTextTranslations = await this.getAorFormContent();
+      
+            } catch (error) {
+              console.error("-- dp-component.connectedCallback() > Error loading translations: ", error);
+            }
+
+            this.translationsLoaded = true;
+            this.requestUpdate();
+          }
+          </script></code></pre>
+          <p>Note: It must be <code>async connectedCallback(): Promise&lt;void&gt;</code></p>
+          <ul>
+            <li>All available translations documents containing key/value pairs can be found in the WCM CMS at <code>content-english / CNH Industrial / Global Translations</code></li>
+            <li>"Label Translations" is the global set with labels that are used all across the portal; <code>*/cnhi/global-translations/label-translations</code>.</li>
+            <li>Other sets are named with the feature key (i.e. "dp.admin" for Dealer Admin labels, or "dp.admin.createUser" for the more specific Admin / Create User labels).</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Provider (continued)...</h2>
+          <p>When using long text translations, you should implement a method to query the Solr index for the long text translations document.</p>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+          async getAorFormContent(): Promise<DpResource> {
+            const query = new SolrQueryBuilder(apiBase);
+            return query
+              .q(SolrQueryBuilder.FIELDS.AUTH_TEMPLATE + ":long-text-translation")
+              .fq(SolrQueryBuilder.FIELDS.DOCUMENT_LIBRARY_LOCALE + ":" + 
+                authenticatedPerson?.preferredLanguage?.toLocaleUpperCase())
+              .fq(SolrQueryBuilder.FIELDS.NAME + ":\"create-user-aor\"")
+              .fl([
+                SolrQueryBuilder.FIELDS.ID,
+                SolrQueryBuilder.FIELDS.MAIN_BODY,
+                SolrQueryBuilder.FIELDS.NAME
+              ])
+              .execute().then(function (response) {
+                return response[0];
+              });
+          }  
+          </script></code></pre>
+        </section>
+
+        <section>
+          <h2>Consumer</h2>
+          <h2 data-id="code-title">Import consume and the context objects</h2>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+            import { consume } from "@lit/context";
+            import {
+              adminTranslationsContext,
+              createUserTranslationsContext,
+              aorTextTranslationsContext,
+              translationsLoadedContext
+            } from "./translation-service-context";
+          </script></code></pre>
+
+          <h2 data-id="code-title">Consume the data for each context object</h2>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+            @consume({ context: adminTranslationsContext, subscribe: true })
+            adminLabels: Record<string, string> | undefined;
+            
+            @consume({ context: createUserTranslationsContext, subscribe: true })
+            labels: Record<string, string> | undefined;
+            
+            @consume({ context: aorTextTranslationsContext, subscribe: true })
+            aorTextTranslations: DpResource | null = null;   
+
+            @consume({ context: translationsLoadedContext, subscribe: true })
+            translationsLoaded = false;
+          </script></code></pre>
+
+        </section>
+
+        <section>
+          <h2>Consumer (continued)...</h2>
+          <p>In the render() function (or in functions called from it), you should provide a loading display while translations are loaded. Here is an example that uses skeleton styles for a shimmer effect...</p>
+          <h2 data-id="code-title">render()</h2>
+          <p></p>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+          if (!this.translationsLoaded) {
+            return html`
+              <div class="skeleton-block"></div>
+              <div class="field is-grouped is-grouped-right">
+                <button class="button is-skeleton">Save</button>
+              </div>
+            `;
+          }
+          return this._aorTemplate();
+          </script></code></pre>
+        </section>
+
+        <section>
+          <h2>Consumer (continued)...</h2>
+         
+          <p>Following is a tagged template function that renders a button with a translated label for the button text...</p>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+          private _nextButtonTemplate() {
+            return html`
+              <div class="has-text-right">
+                <button
+                  class="button is-primary create-user-locations__next-button"
+                  @click=${this.handleNextClick}
+                  ?disabled=${!this.isNextEnabled}
+                >
+                  <!-- Next -->
+                  ${this.labels?.["nextLabel"] ?? "nextLabel"}
+                </button>
+              </div>
+            `;
+          }
+          </script></code></pre>
+          <p>Line 10 exhibits the use of the translated label. You must use the label key to get the translated value and you must also use the label key itself as the default value in case no actual value is found.</p>
+        </section>
+
+        <section>
+          <h2>Consumer (continued)...</h2>
+         
+          <p>Since long text translations come from a rich text field that may contain HTML, we should render them in the following way...</p>
+          <pre data-id="code-animation"><code class="hljs typescript" data-trim data-line-numbers><script type="text/template">
+          
+          import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+          //...other code...
+          // Inside of render() or a function that it calls...
+          ${unsafeHTML(this.aorTextTranslations?.mainbody)}
+          </script></code></pre>
+
+          <p>The <code>unsafeHTML</code> directive will parse an HTML string as HTML and render it in a Lit template. This does not safeguard against XSS attacks injecting untrusted HTML.</p>
+        </section>
+
+        <section>
+          <h2>References</h2>
+          <ul>
+            <li><a href="https://lit.dev/docs/data/context/">Context</a>, Lit Documentation v3</li>
+            <li><a href="https://static.dlrportal.com/dp-assets/dp-common/latest/docs/index.html">DP Common JS API Documentation</a></li>
+            <li><a href="https://cnhind.atlassian.net/wiki/spaces/CNDP/pages/1268514932/Label+and+Long-Text+Translations">Label and Long-Text Translations</a>, Wiki</li>
+            <li><a href="https://cnhind.atlassian.net/wiki/spaces/CNDP/pages/1241579707/Label+Translation+Standards+and+Guidelines">Label Translation Standards and Guidelines</a>, Wiki</li>
+            <li>Implementation Examples can be found in:
+               <ul>
+                  <li><a href="https://dev.azure.com/dealerplatform/dealer-portal/_git/create-user">create-user</a>, Azure DevOps</li>
+                  <li><a href="https://dev.azure.com/dealerplatform/dealer-portal/_git/manage-users">manage-users</a>, Azure DevOps</li>
+               </ul>
+            </li>
+          </ul>
+        </section>
+
+        <!--
+        Reveal.js applies its scaling transform to the .slides container, but not the entire .reveal container. Placing global images in .slides and styling them with ems ensures they are scaled correctly.
+        -->
+        <!-- <img id="logo" src="https://static.dlrportal.com/assets/cnh-brand-logos/svgs/regular/cnhi.svg" alt="Logo - CNH Industrial"> -->
+			</div> <!-- /.slides -->
+		</div> <!-- /.reveal -->
+
+		<script src="../dist/reveal.js"></script>
+		<script src="../plugin/notes/notes.js"></script>
+		<script src="../plugin/markdown/markdown.js"></script>
+		<script src="../plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+        // 16:9 Aspect Ratios: 1280 x 720 || 1600 x 900 || 1920 x 1080
+        width: 1920,
+        height: 1080,
+        margin: 0.05, // 0.05 || 0.01 for 16:9
+        controls: false, // Hide the arrowcontrols
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>
